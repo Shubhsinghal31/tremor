@@ -97,8 +97,8 @@ class PencilSensorManager: NSObject, ObservableObject {
         guard isDrawingEnabled else { return } // Prevent drawing if disabled
         
         // Reset filter state on new stroke to avoid jumping from previous lift
-        // ideally we re-init or use a gap, but 1€ filter usually adapts quick.
-        // For best results, we might want to 'reset' the filter here if exposed.
+        pointFilter = OneEuroPointFilter(mincutoff: 1.0, beta: 0.005, dcutoff: 1.0)
+        updateFilterParameters()
         
         let point = isStabilizationEnabled ? pointFilter.filter(location) : location
         addPoint(point, pressure: pressure, roll: roll)
@@ -163,6 +163,7 @@ class PencilSensorManager: NSObject, ObservableObject {
     
     // MARK: - Sensor Updates
     
+    @MainActor
     func update(from touch: UITouch, in view: UIView) {
         // This is called by touchesMoved/Began
         // We extract data and call stroke methods
@@ -209,21 +210,14 @@ class PencilSensorManager: NSObject, ObservableObject {
         let filtered = pointFilter.filter(rawLocation)
         currentHoverPoint = filtered
         
-        // Calculate Metrics
+                // Calculate Metrics
         let dx = rawLocation.x - filtered.x
         let dy = rawLocation.y - filtered.y
         lastTremorMagnitude = sqrt(dx*dx + dy*dy)
-        // The hover gesture doesn't provide `touch.force`, so `lastSqueezeForce` cannot be updated here directly from `touch.force`.
-        // If `lastSqueezeForce` is meant to reflect actual squeeze, it should be updated via `handleSqueeze` or `update(from: UITouch)`.
-        // For now, I'll comment out the line as `gesture` does not have a `force` property.
-        // lastSqueezeForce = touch.force * 1000 // approx grams?
+        // Note: UIHoverGestureRecognizer doesn't provide force/angle data
+        // These are only available from UITouch objects
         
-        // Angles        // Update Angles
-            altitude = gesture.altitudeAngle
-            azimuth = gesture.azimuthAngle(in: view)
-             if #available(iOS 17.5, *) { roll = gesture.rollAngle }
-            
-            updateLog()
+        updateLog()
             
         case .ended, .cancelled:
             currentHoverPoint = nil
