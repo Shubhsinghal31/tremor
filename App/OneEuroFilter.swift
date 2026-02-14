@@ -39,7 +39,12 @@ class OneEuroFilter {
         
         // Estimate the current variation (derivative)
         // If it's the first time, we assume the derivative is 0
-        let dxValue = (x != nil) ? (value - x!.lastValue()) / dt : 0.0
+        let dxValue: Double
+        if let xFilter = x {
+            dxValue = (value - xFilter.lastValue()) / dt
+        } else {
+            dxValue = 0.0
+        }
         let edx = dx?.filter(dxValue, dt: dt, cutoff: dcutoff) ?? {
             let f = LowPassFilter()
             let _ = f.filter(dxValue, dt: dt, cutoff: dcutoff)
