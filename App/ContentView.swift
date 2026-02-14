@@ -12,10 +12,10 @@ struct ContentView: View {
                     Label("Free Hand", systemImage: "pencil.and.scribble")
                 }
             
-            // Mode 2: Assessment
-            SpiralExerciseView(manager: manager)
+            // Mode 2: Assessment & Analytics
+            TremorAnalyticsView(manager: manager)
                 .tabItem {
-                    Label("Assessment", systemImage: "waveform.path.ecg")
+                    Label("Analytics", systemImage: "chart.xyaxis.line")
                 }
         }
     }
