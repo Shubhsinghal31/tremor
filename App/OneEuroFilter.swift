@@ -22,6 +22,11 @@ class OneEuroFilter {
         self.dcutoff = dcutoff
     }
     
+    func updateParams(mincutoff: Double, beta: Double) {
+        self.mincutoff = mincutoff
+        self.beta = beta
+    }
+    
     func filter(_ value: Double, timestamp: Double? = nil) -> Double {
         let t = timestamp ?? CACurrentMediaTime()
         
@@ -91,7 +96,7 @@ class OneEuroPointFilter {
     
     // Config update
     func updateParams(mincutoff: Double, beta: Double) {
-        // We actally need to recreate or expose setters. For simplicity, we assume fixed or we can add setters.
-        // Let's rely on init for now, or you can add public vars to OneEuroFilter.
+        xFilter.updateParams(mincutoff: mincutoff, beta: beta)
+        yFilter.updateParams(mincutoff: mincutoff, beta: beta)
     }
 }

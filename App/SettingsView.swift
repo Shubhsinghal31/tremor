@@ -207,6 +207,10 @@ struct SettingsView: View {
                 }
             }
         }
+        // Input for Live Metrics (Background)
+        .background(PencilTrackingView(manager: manager))
+        .onAppear { manager.isDrawingEnabled = false }
+        .onDisappear { manager.isDrawingEnabled = true }
     }
 }
 

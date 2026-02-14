@@ -130,6 +130,7 @@ struct SpiralExerciseView: View {
                         drawStroke(manager.currentPath, context: &context)
                     }
                     .frame(width: 300, height: 300) // Constrain drawing check
+                    .overlay(PencilTrackingView(manager: manager))
                     
                     // Floating Cursor/Label (Mock "Tracing...")
                     VStack {

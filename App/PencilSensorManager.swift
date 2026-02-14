@@ -89,9 +89,13 @@ class PencilSensorManager: NSObject, ObservableObject {
     
     // UIPencilInteraction is handled by the View (PencilTrackingView)
     
+    @Published var isDrawingEnabled: Bool = true
+    
     // MARK: - Drawing Lifecycle (Called by Views)
     
     func startStroke(at location: CGPoint, pressure: CGFloat, roll: CGFloat) {
+        guard isDrawingEnabled else { return } // Prevent drawing if disabled
+        
         // Reset filter state on new stroke to avoid jumping from previous lift
         // ideally we re-init or use a gap, but 1€ filter usually adapts quick.
         // For best results, we might want to 'reset' the filter here if exposed.
@@ -105,10 +109,15 @@ class PencilSensorManager: NSObject, ObservableObject {
     
     func moveStroke(to location: CGPoint, pressure: CGFloat, roll: CGFloat) {
         let point = isStabilizationEnabled ? pointFilter.filter(location) : location
-        addPoint(point, pressure: pressure, roll: roll)
         
-        // Log
-        logger.log(point, pressure: pressure, altitude: altitude, azimuth: azimuth, roll: roll)
+        if isDrawingEnabled {
+            addPoint(point, pressure: pressure, roll: roll)
+        }
+        
+        // Log even if not drawing? Maybe not.
+        if isDrawingEnabled {
+            logger.log(point, pressure: pressure, altitude: altitude, azimuth: azimuth, roll: roll)
+        }
     }
     
     func endStroke() {
@@ -278,29 +287,29 @@ class PredictionInputView: UIView {
     }
     
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first, touch.type == .pencil else { return }
+        guard let touch = touches.first else { return } // Allow any touch type
         manager?.update(from: touch, in: self)
         
         let loc = touch.location(in: self)
         var r: CGFloat = 0
         if #available(iOS 17.5, *) { r = touch.rollAngle }
         
-        manager?.startStroke(at: loc, pressure: touch.force, roll: r)
+        manager?.startStroke(at: loc, pressure: touch.force > 0 ? touch.force : 1.0, roll: r)
     }
     
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first, touch.type == .pencil else { return }
+        guard let touch = touches.first else { return } // Allow any touch type
         manager?.update(from: touch, in: self)
         
         let loc = touch.location(in: self)
         var r: CGFloat = 0
         if #available(iOS 17.5, *) { r = touch.rollAngle }
         
-        manager?.moveStroke(to: loc, pressure: touch.force, roll: r)
+        manager?.moveStroke(to: loc, pressure: touch.force > 0 ? touch.force : 1.0, roll: r)
     }
     
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first, touch.type == .pencil else { return }
+        guard !touches.isEmpty else { return }
         manager?.endStroke()
     }
     
